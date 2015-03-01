@@ -169,16 +169,20 @@ xmlnode_received_cb(PurpleConnection *gc, xmlnode **packet, gpointer null)
 
 				if(strcmp(strNS, "urn:xmpp:receipts") == 0)
 				{
+                                        const char* strType = xmlnode_get_attrib(*packet, "type");
+
 					xmlnode *message = xmlnode_new("message");
 					xmlnode_set_attrib(message, "to", strFrom);
-					
+                                        if (strType != NULL && *strType != '\0')
+                                            xmlnode_set_attrib(message, "type", strType);
+
 					xmlnode *received = xmlnode_new_child(message, "received");
 					xmlnode_set_namespace(received, "urn:xmpp:receipts");
-					
+
 					xmlnode_set_attrib(received, "id", strId);
 
 					purple_signal_emit(purple_connection_get_prpl(gc), "jabber-sending-xmlnode", gc, &message);
-					
+
 					if (message != NULL)
 						xmlnode_free(message);
 				}
@@ -234,7 +238,7 @@ deleting_conversation_cb(PurpleConversation *conv)
 	g_hash_table_foreach_remove(ht_locations,
 								deleting_conversation_remove_items,
 								GTK_IMHTML(PIDGIN_CONVERSATION(conv)->imhtml)->text_buffer);
-            
+
 	#ifdef DEBUG
 	printf("conversation closed, table size now %d \n", g_hash_table_size(ht_locations));
 	#endif
@@ -297,7 +301,7 @@ plugin_load(PurplePlugin *plugin)
 
 	if (!jabber)
 		return FALSE;
-	
+
 	//Publish support via caps
 	gboolean ok;
 	purple_plugin_ipc_call (jabber, "add_feature", &ok, "urn:xmpp:receipts");
